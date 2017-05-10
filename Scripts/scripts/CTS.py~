@@ -32,7 +32,7 @@ class CTS:
                 thread.join()
             Command.run("rm -rf " + tmpromFolder)
             os._exit(0)
-            time.sleep(20)
+            time.sleep(200)
 
         #First test
         setOptionsThreads = []
@@ -55,6 +55,16 @@ class CTS:
             thread.join()
 
         #Second test
+        Command.adbReboot(self.deviceIdList[0])
+        time.sleep(10)
+        pushDataThread = threading.Thread(target = self.pushDataToDevice, args = (deviceIdList[0],))
+        runCasesThread = threading.Thread(target = self.runCases, args = (False,))
+        pushDataThread.start()
+        runCasesThread.start()
+        pushDataThread.join()
+        runCasesThread.join()
+
+        #Third test
         Command.adbReboot(self.deviceIdList[0])
         time.sleep(10)
         pushDataThread = threading.Thread(target = self.pushDataToDevice, args = (deviceIdList[0],))
@@ -147,11 +157,11 @@ class CTS:
              Command.run("./_expect.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
         else:
-            deviceIdAndAbi = deviceIdList[0]
+            deviceIdsAndAbi = deviceIdList[0]
             if self.forceAbi == "32":
-                deviceIdAndAbi += " --force-abi 32"
+                deviceIdsAndAbi += " --force-abi 32"
             elif self.forceAbi == "64":
-                deviceIdAndAbi += " --force-abi 64"
+                deviceIdsAndAbi += " --force-abi 64"
             #Second Loop
             planName = self.getCtsTestPlanName()
             sessionId = self.getSessionId()
@@ -163,7 +173,7 @@ class CTS:
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
             else:
              Command.run("./__expect.sh " + str(versionIndex) + " \""\
-                 + deviceIdAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
+                 + deviceIdsAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
 
     def getCaseIndex(self, qctsFolder):
         os.chdir(qctsFolder)
