@@ -11,6 +11,7 @@ class CTS:
     version = None
     romUrl = None
     forceAbi = None
+    global deviceIdList
 
     def __init__(self, workspace, devices, version, url, abi):
         self.workspace = workspace
@@ -77,7 +78,7 @@ class CTS:
         flashAllScript = None
         for dirPath,dirNames,fileNames in os.walk(romFolder):
             for fileName in fileNames:
-                if fileName == "flash_all.sh":
+                if fileName == "flash_all_except_storage.sh":
                     flashAllScript = os.path.join(dirPath, fileName)
                     break;
         if flashAllScript == None:
@@ -138,7 +139,7 @@ class CTS:
              Command.run("./_expect6.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
             elif self.version.startswith("7"):
-             Command.run("./_expect7.sh " + str(versionIndex) + " \"" \
+             Command.run("./_expect7.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
             else:
              Command.run("./_expect.sh " + str(versionIndex) + " \""\
@@ -153,11 +154,11 @@ class CTS:
             planName = self.getCtsTestPlanName()
             sessionId = self.getSessionId()
             if self.version.startswith("6"):
-             Command.run("./__expect6.sh " + str(versionIndex) + " \"" \
-                 + deviceIdAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
+             Command.run("./__expect6.sh " + str(versionIndex) + " \""\
+                 + deviceIdsAndAbi + "\" " + qctsFolder + " "  + planName + " " + str(sessionId))
             elif self.version.startswith("7"):
              Command.run("./__expect7.sh " + str(versionIndex) + " \"" \
-                 + deviceIdAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
+                 + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
             else:
              Command.run("./__expect.sh " + str(versionIndex) + " \""\
                  + deviceIdAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
@@ -184,10 +185,10 @@ class CTS:
         return "PN_" + time.strftime("%m%d%H%M%S", time.localtime(time.time()))
 
     def getSessionId(self):
- #       if self.version.startswith("7"):
-        ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/results")
- #       else:
-#         ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/repository/results")
+        if self.version.startswith("7"):
+         ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/results")
+        else:
+         ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version,  "android-cts/repository/results")
         reportZipList = []
         for report in os.listdir(ctsReportsFolder):
             if report.endswith(".zip"):
@@ -243,7 +244,7 @@ if __name__ == "__main__":
             os._exit(0)
 
     #Main body
-    workspace = os.path.dirname( os.path.realpath(sys.path[0]))
+    workspace = os.path.dirname(os.path.realpath(sys.path[0]))
     deviceIdList = []
     adbDevicesInfo = os.popen("adb devices").read()
     for deviceId in argvDict["devices"].split(","):
@@ -252,3 +253,4 @@ if __name__ == "__main__":
             os._exit(0)
         deviceIdList.append(deviceId)
     CTS(workspace, deviceIdList, argvDict["version"], argvDict["romUrl"], argvDict["abi"]).run()
+
