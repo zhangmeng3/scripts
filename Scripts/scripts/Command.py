@@ -41,11 +41,11 @@ def getDeviceIdFromResultZip(zipPath):
     resultZip = zipfile.ZipFile(zipPath, "r")
     testResultXml = None
     for filename in resultZip.namelist():
-        if filename.endswith("test_result.xml"):
+        if filename.endswith("testResult.xml"):
             testResultXml = filename
             break
     if testResultXml is not None:
-        returns = re.findall('deviceID="[\w,]+"', resultZip.read(testResultXml))
+        returns =  re.findall('deviceID="[\w,]+"', resultZip.read(testResultXml))
         if len(returns) > 0:
             return returns[0].split('"')[1]
         else:
@@ -58,7 +58,7 @@ def getVersionAndRegion(deviceId):
 
 def getDeviceDpi(deviceId):
     returnInfo = os.popen("adb -s " + deviceId + " shell dumpsys window windows").read()
-    returns = re.findall('mScreenRect=\[0,0\]\[\d+,\d+\]', returnInfo)
+    returns =  re.findall('mScreenRect=\[0,0\]\[\d+,\d+\]', returnInfo)
     try:
         Dpis = returns[0].replace("mScreenRect=[0,0][", "").replace("]", "").split(",")
         Dpi = Dpis[1] + "x"+ Dpis[0]

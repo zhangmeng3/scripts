@@ -7,10 +7,7 @@ spawn bash _normal.sh $normalWorkspace
 expect "]"
 send "${versionIndex}\n"
 expect ">"
-send "run cts ${deviceIdList} --plan 6.0CTS --shards ${shardsValue} --disable-reboot --skip-preconditions\n"
+send "run cts ${deviceIdList} --plan 6.0 --shards ${shardsValue} --disable-reboot --skip-preconditions\n"
 expect "Time:"
 send "exit\n"
 interact
-
-
-

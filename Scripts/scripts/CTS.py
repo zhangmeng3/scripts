@@ -35,19 +35,8 @@ class CTS:
             time.sleep(200)
 
         #First test
-        setOptionsThreads = []
-        for deviceId in self.deviceIdList:
-            setOptionsThread = threading.Thread(target = self.setOptions, args = (deviceId,))
-            setOptionsThread.start()
-            setOptionsThreads.append(setOptionsThread)
-        for thread in setOptionsThreads:
-            thread.join()
 
         threads = []
-        for deviceId in self.deviceIdList:
-            pushDataThread = threading.Thread(target = self.pushDataToDevice, args = (deviceId,))
-            pushDataThread.start()
-            threads.append(pushDataThread)
         runCasesThread = threading.Thread(target = self.runCases, args = (True,))
         runCasesThread.start()
         threads.append(runCasesThread)
@@ -55,23 +44,17 @@ class CTS:
             thread.join()
 
         #Second test
-        Command.adbReboot(self.deviceIdList[0])
+        #Command.adbReboot(self.deviceIdList[0])
         time.sleep(10)
-        pushDataThread = threading.Thread(target = self.pushDataToDevice, args = (deviceIdList[0],))
         runCasesThread = threading.Thread(target = self.runCases, args = (False,))
-        pushDataThread.start()
         runCasesThread.start()
-        pushDataThread.join()
         runCasesThread.join()
 
         #Third test
-        Command.adbReboot(self.deviceIdList[0])
+        #Command.adbReboot(self.deviceIdList[0])
         time.sleep(10)
-        pushDataThread = threading.Thread(target = self.pushDataToDevice, args = (deviceIdList[0],))
         runCasesThread = threading.Thread(target = self.runCases, args = (False,))
-        pushDataThread.start()
         runCasesThread.start()
-        pushDataThread.join()
         runCasesThread.join()
 
         print "\n-------------DONE--------------\n"
@@ -107,24 +90,6 @@ class CTS:
         # doing
         #--------------
 
-    def setOptions(self, deviceId):
-        CtsDeviceAdminApk = os.path.join(self.workspace, "qcts/google/cts",
-            self.version,"android-cts/repository/testcases/CtsDeviceAdmin.apk")
-        jar = os.path.join(self.workspace, "scripts/cts.jar")
-        Command.adbInstallApk(deviceId, CtsDeviceAdminApk)
-        Command.adbPush(deviceId, jar, "/data/local/tmp/")
-        #developer_options&date_time&vpn
-        Command.runUiautomatorCase(deviceId, "CommonSettings")
-
-    def pushDataToDevice(self, deviceId):
-        svox = os.path.join(self.workspace, "CTSFILES/svox")
-        test = os.path.join(self.workspace, "CTSFILES/test")
-        Command.adbPush(deviceId, svox, "/sdcard/svox")
-        os.chdir(test)
-        copyMediaCommand = "./copy_media.sh " + Command.getDeviceDpi(deviceId) + " -s " + deviceId
-        print "|--- " + copyMediaCommand + " ---|"
-        os.system(copyMediaCommand)
-
     def runCases(self, firstTime = True):
         qctsFolder = os.path.join(self.workspace, "qcts")
         scriptsFolder = os.path.join(self.workspace, "scripts")
@@ -157,6 +122,11 @@ class CTS:
              Command.run("./_expect.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
         else:
+            shardsValue = 0
+            deviceIdsAndAbi = ""
+            for deviceId in self.deviceIdList:
+                deviceIdsAndAbi += "-s " + deviceId + " "
+                shardsValue += 1
             deviceIdsAndAbi = deviceIdList[0]
             if self.forceAbi == "32":
                 deviceIdsAndAbi += " --force-abi 32"
@@ -168,9 +138,12 @@ class CTS:
             if self.version.startswith("6"):
              Command.run("./__expect6.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " "  + planName + " " + str(sessionId))
+            #elif self.version.startswith("7"):
+            # Command.run("./__expect7.sh " + str(versionIndex) + " \"" \
+            #     + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
             elif self.version.startswith("7"):
              Command.run("./__expect7.sh " + str(versionIndex) + " \"" \
-                 + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
+                 + deviceIdsAndAbi + "\" " + qctsFolder + " " +  str(sessionId))
             else:
              Command.run("./__expect.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
@@ -265,4 +238,3 @@ if __name__ == "__main__":
             os._exit(0)
         deviceIdList.append(deviceId)
     CTS(workspace, deviceIdList, argvDict["version"], argvDict["romUrl"], argvDict["abi"]).run()
-

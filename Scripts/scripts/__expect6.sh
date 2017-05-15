@@ -8,7 +8,7 @@ spawn bash _normal.sh $normalWorkspace
 expect "]"
 send "${versionIndex}\n"
 expect ">"
-send "add derivedplan --plan ${planName} -s ${sessionId} -r fail\n"
+send "add derivedplan --plan ${planName}  -s  ${sessionId}  -r fail\n"
 expect ">"
 send "run cts -s ${deviceId} --plan  ${planName} --disable-reboot  --skip-preconditions\n"
 expect "Time:"
