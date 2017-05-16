@@ -171,28 +171,17 @@ class CTS:
 
     def getSessionId(self):
         if self.version.startswith("7"):
-         ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/results")
+            ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/results")
+            print "7.0/7.1 CTS is running"
         else:
-         ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version,  "android-cts/repository/results")
+            ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version,"android-cts/repository/results")
+            print "6.0/5.1/5.0/4.4 is running"
         reportZipList = []
         for report in os.listdir(ctsReportsFolder):
             if report.endswith(".zip"):
-                deviceId = Command.getDeviceIdFromResultZip(os.path.join(ctsReportsFolder, report))
-                if deviceId != None:
-                    reportZipList.append(report + "-" + deviceId)
-        reportZipList.sort(cmp=lambda x,y: cmp(x.lower(), y.lower()), reverse = True)
-        count = 0
-        for rz in reportZipList:
-            matchAllDeviceIds = True
-            for deviceId in deviceIdList:
-                if rz.find(deviceId) < 0:
-                    matchAllDeviceIds = False
-                    break
-            if matchAllDeviceIds is True:
-                break
-            count += 1
-        return len(reportZipList) - count - 1
-
+               reportZipList.append(report)
+               reportZipList.sort()
+        return len(reportZipList) - 1
 
 #command line : python CTS.py --id deviceid1,deviceid2,,,deviceidn --version version --abi 32,64 --url rom_url
 if __name__ == "__main__":
