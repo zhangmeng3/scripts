@@ -7,6 +7,11 @@ precondition:
 run command:
     python CTS.py --id deviceid1,deviceid2,,,deviceidn --version version --abi 32,64 --url rom_url
     example:
-        python '/home/bengbeng/CTS/workspace/scripts/CTS.py' --id 344f5bfc --version 4.4.4 --abi 64
-        python '/home/bengbeng/CTS/workspace/scripts/CTS.py' --id 8ae3df89,456aeeed --version 5.1.3.arm
-        python '/home/bengbeng/CTS/workspace/scripts/CTS.py' --id 344f5bfc --url http://..._cts.tgz
+        python '/home/mi/workspace1/cts-exe/scripts/CTS.py' --id 344f5bfc --version 4.4.4 --abi 64
+        python '/home/mi/workspace1/cts-exe/scripts/CTS.py' --id 8ae3df89,456aeeed --version 5.1.3.arm
+        python '/home/mi/workspace1/cts-exe/scripts/CTS.py' --id 344f5bfc --url http://..._cts.tgz
+        python '/home/mi/workspace1/cts/scripts/CTS.py' --id 7a54c110 --version 6.0_R15
+
+python '/home/mi/workspace1/cts/scripts/CTS.py' --id d6215d4f --version 7.0_R7
+python '/home/mi/workspace1/cts/scripts/CTS.py' --id 7a54c110 --version 6.0_R18
+
