@@ -11,7 +11,6 @@ class CTS:
     version = None
     romUrl = None
     forceAbi = None
-    global deviceIdList
 
     def __init__(self, workspace, devices, version, url, abi):
         self.workspace = workspace
@@ -32,11 +31,21 @@ class CTS:
                 thread.join()
             Command.run("rm -rf " + tmpromFolder)
             os._exit(0)
-            time.sleep(200)
 
         #First test
+        setOptionsThreads = []
+        for deviceId in self.deviceIdList:
+            setOptionsThread = threading.Thread(target = self.setOptions, args = (deviceId,))
+            setOptionsThread.start()
+            setOptionsThreads.append(setOptionsThread)
+        for thread in setOptionsThreads:
+            thread.join()
 
         threads = []
+        for deviceId in self.deviceIdList:
+            pushDataThread = threading.Thread(target = self.pushDataToDevice, args = (deviceId,))
+            pushDataThread.start()
+            threads.append(pushDataThread)
         runCasesThread = threading.Thread(target = self.runCases, args = (True,))
         runCasesThread.start()
         threads.append(runCasesThread)
@@ -44,17 +53,13 @@ class CTS:
             thread.join()
 
         #Second test
-        #Command.adbReboot(self.deviceIdList[0])
+        Command.adbReboot(self.deviceIdList[0])
         time.sleep(10)
+        pushDataThread = threading.Thread(target = self.pushDataToDevice, args = (deviceIdList[0],))
         runCasesThread = threading.Thread(target = self.runCases, args = (False,))
+        pushDataThread.start()
         runCasesThread.start()
-        runCasesThread.join()
-
-        #Third test
-        #Command.adbReboot(self.deviceIdList[0])
-        time.sleep(10)
-        runCasesThread = threading.Thread(target = self.runCases, args = (False,))
-        runCasesThread.start()
+        pushDataThread.join()
         runCasesThread.join()
 
         print "\n-------------DONE--------------\n"
@@ -72,7 +77,7 @@ class CTS:
         flashAllScript = None
         for dirPath,dirNames,fileNames in os.walk(romFolder):
             for fileName in fileNames:
-                if fileName == "flash_all_except_storage.sh":
+                if fileName == "flash_all.sh":
                     flashAllScript = os.path.join(dirPath, fileName)
                     break;
         if flashAllScript == None:
@@ -80,7 +85,6 @@ class CTS:
         Command.adbRebootBootloader(deviceId)
         os.system("/bin/bash " + flashAllScript + " -s " + deviceId)
         Command.waitAndSetAdbDebugOn(deviceId)
-        time.sleep(30)
         #Init device
         print "run guide settings by uiautomator, "
         #jar = os.path.join(self.workspace, "scripts/cts.jar")
@@ -89,6 +93,24 @@ class CTS:
         #--------------
         # doing
         #--------------
+
+    def setOptions(self, deviceId):
+        CtsDeviceAdminApk = os.path.join(self.workspace, "qcts/google/cts",
+            self.version,"android-cts/repository/testcases/CtsDeviceAdmin.apk")
+        jar = os.path.join(self.workspace, "scripts/cts.jar")
+        Command.adbInstallApk(deviceId, CtsDeviceAdminApk)
+        Command.adbPush(deviceId, jar, "/data/local/tmp/")
+        #developer_options&date_time&vpn
+        Command.runUiautomatorCase(deviceId, "CommonSettings")
+
+    def pushDataToDevice(self, deviceId):
+        svox = os.path.join(self.workspace, "CTSFILES/svox")
+        test = os.path.join(self.workspace, "CTSFILES/test")
+        Command.adbPush(deviceId, svox, "/sdcard/svox")
+        os.chdir(test)
+        copyMediaCommand = "./copy_media.sh " + Command.getDeviceDpi(deviceId) + " -s " + deviceId
+        print "|--- " + copyMediaCommand + " ---|"
+        os.system(copyMediaCommand)
 
     def runCases(self, firstTime = True):
         qctsFolder = os.path.join(self.workspace, "qcts")
@@ -115,38 +137,24 @@ class CTS:
             if self.version.startswith("6"):
              Command.run("./_expect6.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
-            elif self.version.startswith("7"):
-             Command.run("./_expect7.sh " + str(versionIndex) + " \""\
-                 + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
             else:
              Command.run("./_expect.sh " + str(versionIndex) + " \""\
                  + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
         else:
-            shardsValue = 0
-            deviceIdsAndAbi = ""
-            for deviceId in self.deviceIdList:
-                deviceIdsAndAbi += "-s " + deviceId + " "
-                shardsValue += 1
-            deviceIdsAndAbi = deviceIdList[0]
+            deviceIdAndAbi = deviceIdList[0]
             if self.forceAbi == "32":
-                deviceIdsAndAbi += " --force-abi 32"
+                deviceIdAndAbi += " --force-abi 32"
             elif self.forceAbi == "64":
-                deviceIdsAndAbi += " --force-abi 64"
+                deviceIdAndAbi += " --force-abi 64"
             #Second Loop
             planName = self.getCtsTestPlanName()
             sessionId = self.getSessionId()
             if self.version.startswith("6"):
              Command.run("./__expect6.sh " + str(versionIndex) + " \""\
-                 + deviceIdsAndAbi + "\" " + qctsFolder + " "  + planName + " " + str(sessionId))
-            #elif self.version.startswith("7"):
-            # Command.run("./__expect7.sh " + str(versionIndex) + " \"" \
-            #     + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
-            elif self.version.startswith("7"):
-             Command.run("./__expect7.sh " + str(versionIndex) + " \"" \
-                 + deviceIdsAndAbi + "\" " + qctsFolder + " " +  str(sessionId))
-            else:
+                 + deviceIdsAndAbi + "\" " + qctsFolder + " " + str(shardsValue))
+            else :          
              Command.run("./__expect.sh " + str(versionIndex) + " \""\
-                 + deviceIdsAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
+                 + deviceIdAndAbi + "\" " + qctsFolder + " " + planName + " " + str(sessionId))
 
     def getCaseIndex(self, qctsFolder):
         os.chdir(qctsFolder)
@@ -170,18 +178,25 @@ class CTS:
         return "PN_" + time.strftime("%m%d%H%M%S", time.localtime(time.time()))
 
     def getSessionId(self):
-        if self.version.startswith("7"):
-            ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/results")
-            print "7.0/7.1 CTS is running"
-        else:
-            ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version,"android-cts/repository/results")
-            print "6.0/5.1/5.0/4.4 is running"
+        ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/repository/results")
         reportZipList = []
         for report in os.listdir(ctsReportsFolder):
             if report.endswith(".zip"):
-               reportZipList.append(report)
-               reportZipList.sort()
-        return len(reportZipList) - 1
+                deviceId = Command.getDeviceIdFromResultZip(os.path.join(ctsReportsFolder, report))
+                if deviceId != None:
+                    reportZipList.append(report + "-" + deviceId)
+        reportZipList.sort(cmp=lambda x,y: cmp(x.lower(), y.lower()), reverse = True)
+        count = 0
+        for rz in reportZipList:
+            matchAllDeviceIds = True
+            for deviceId in deviceIdList:
+                if rz.find(deviceId) < 0:
+                    matchAllDeviceIds = False
+                    break
+            if matchAllDeviceIds is True:
+                break
+            count += 1
+        return len(reportZipList) - count - 1
 
 #command line : python CTS.py --id deviceid1,deviceid2,,,deviceidn --version version --abi 32,64 --url rom_url
 if __name__ == "__main__":
@@ -218,7 +233,7 @@ if __name__ == "__main__":
             os._exit(0)
 
     #Main body
-    workspace = os.path.dirname(os.path.realpath(sys.path[0]))
+    workspace = os.path.dirname( os.path.realpath(sys.path[0]))
     deviceIdList = []
     adbDevicesInfo = os.popen("adb devices").read()
     for deviceId in argvDict["devices"].split(","):
@@ -227,3 +242,4 @@ if __name__ == "__main__":
             os._exit(0)
         deviceIdList.append(deviceId)
     CTS(workspace, deviceIdList, argvDict["version"], argvDict["romUrl"], argvDict["abi"]).run()
+

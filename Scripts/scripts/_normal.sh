@@ -1,4 +1,3 @@
-#!/usr/bin/expect
 #/bin/bash
 workspace=$1
 cd $workspace
