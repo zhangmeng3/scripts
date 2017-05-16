@@ -4,8 +4,6 @@ set deviceIdList [lindex $argv 1]
 set normalWorkspace [lindex $argv 2]
 set shardsValue [lindex $argv 3]
 spawn bash _normal.sh $normalWorkspace
-expect "yes/no"
-send "yes\n"
 expect "]"
 send "${versionIndex}\n"
 expect ">"
