@@ -91,7 +91,7 @@ class CTS:
         #--------------
 
     def runCases(self, firstTime = True):
-        qctsFolder = os.path.join(self.workspace, "qcts")
+        qctsFolder = os.path.join(self.workspace, "qcts1")
         scriptsFolder = os.path.join(self.workspace, "scripts")
         versionIndex = self.getCaseIndex(qctsFolder)
 
@@ -171,10 +171,10 @@ class CTS:
 
     def getSessionId(self):
         if self.version.startswith("7"):
-            ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/results")
+            ctsReportsFolder = os.path.join(self.workspace, "qcts1/google/cts", self.version, "android-cts/results")
             print "7.0/7.1 CTS is running"
         else:
-            ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version,"android-cts/repository/results")
+            ctsReportsFolder = os.path.join(self.workspace, "qcts1/google/cts", self.version,"android-cts/repository/results")
             print "6.0/5.1/5.0/4.4 is running"
         reportZipList = []
         for report in os.listdir(ctsReportsFolder):
