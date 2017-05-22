@@ -1,5 +1,4 @@
 #!/usr/bin/expect
-export LANG="en_US.UTF-8"
 set versionIndex [lindex $argv 0]
 set deviceId [lindex $argv 1]
 set normalWorkspace [lindex $argv 2]
