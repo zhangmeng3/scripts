@@ -169,6 +169,7 @@ class CTS:
     def getCtsTestPlanName(self):
         return "PN_" + time.strftime("%m%d%H%M%S", time.localtime(time.time()))
 
+
     def getSessionId(self):
         if self.version.startswith("7"):
             ctsReportsFolder = os.path.join(self.workspace, "qcts/google/cts", self.version, "android-cts/results")
@@ -179,9 +180,21 @@ class CTS:
         reportZipList = []
         for report in os.listdir(ctsReportsFolder):
             if report.endswith(".zip"):
-               reportZipList.append(report)
-               reportZipList.sort()
-        return len(reportZipList) - 1
+                deviceId = Command.getDeviceIdFromResultZip(os.path.join(ctsReportsFolder, report))
+                if deviceId != None:
+                    reportZipList.append(report + "-" + deviceId)
+        reportZipList.sort(cmp=lambda x,y: cmp(x.lower(), y.lower()), reverse = True)
+        count = 0
+        for rz in reportZipList:
+            matchAllDeviceIds = True
+            for deviceId in deviceIdList:
+                if rz.find(deviceId) < 0:
+                    matchAllDeviceIds = False
+                    break
+            if matchAllDeviceIds is True:
+                break
+            count += 1
+        return len(reportZipList) - count - 1
 
 #command line : python CTS.py --id deviceid1,deviceid2,,,deviceidn --version version --abi 32,64 --url rom_url
 if __name__ == "__main__":
